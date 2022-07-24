@@ -373,6 +373,75 @@ app.put("/update_category_status/:id/:status", (req, res) => {
 
 //--------------------product apis----------------------------
 
+app.post('/add_product', async (req, res) => {
+    const token = req.headers ['token'];
+    const decoded = await verify_token( token, secret, res);
+    if (decoded){
+        const product_name = req.body.product_name;
+        const price = req.body.price;
+        const mrp = req.body.mrp;
+        const discount = req.body.discount;
+        const image = req.body.image;
+        const info = req.body.info;
+        const category_id = req.body.category_id;
+        const ratings = req.body.ratings;
+        const stock = req.body.stock;
+        const is_available = req.body.is_available;
+        const add_product_query = `INSERT INTO product ( product_name, price, mrp, discount, image, info, category_id,ratings, stoke, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        connection.query(add_product_query, [product_name, price, mrp, discount, image, info, category_id, ratings, stoke, is_available,], (err, data) => {
+            if(err){
+                res.send({
+                    success:false,
+                    error: err.sqlMessage,
+                    data: []
+                });
+            } else{
+                res.send({
+                    success:true,
+                    error: "",
+                    data: "product added"
+                });
+            }
+        });
+    }
+});
+
+app.put("/update_product/id", async (req, res) =>{
+    const token =req.headers['token'];
+    const decoded = await verify_token(token, secret, res);
+    if(decoded) {
+        const id =req.params.id;
+        const product_name = req.body.product_name;
+        const price = req.body.price;
+        const mrp = req.body.mrp;
+        const discount = req.body.discount;
+        const image = req.body.image;
+        const info = req.body.info;
+        const category_id = req.body.category_id;
+        const ratings = req.body.ratings;
+        const stock = req.body.stock;
+        const is_available = req.body.is_available;
+        const update_product_query =`UPDATE product SET product_name = ?, price= ?, mrp= ?,discount = ?,image = ?, info = ?, category_id = ?, rating = ?, stock = ?, is_available = ? WHERE product_id = ?`;
+        connection.query (update_product_query, [product_name, price, mrp, discount, image, info, category_id, ratings, stock, is_available, id], (err, data) => {
+            if(err){
+                res.send({
+                    success: false,
+                    error:err.sqlMessage,
+                    data:[]
+                });
+            } else{
+                res.send({
+                    success: true,
+                    error: "",
+                    data: "product updated"
+                });
+            }
+        });
+    }
+});
+
+//-----------------------product apis END------------------
+
 
 app.listen(8000, () => {
     console.log('Server is running on port 8000');
