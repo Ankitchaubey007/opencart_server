@@ -95,6 +95,58 @@ app.post('/staff_login', (req, res) => {
     }
 });
 
+app.post("/add_staff", (req, res) =>{
+    const token = req.headers['token'];
+    if(token){
+        let decoded = undefined;
+        try{
+            decoded = jwt.verify(token, secret);
+        } catch (err){
+            res.status(401).send({
+                success: false,
+                msg: "invalid token",
+                data: [],
+                length: 0
+
+            });
+        }
+        if(decoded.role == 'admin') {
+            const username =req.body.username;
+            const password =req.body.password;
+            const role = req.body.role;
+            const add_staff_query =`INSERT INTO admin (username,password,role) VALUES (?,?,?)`;
+            connection.query(add_staff_query,[username,password,role], (err, data) => {
+                if (err){
+                    req.send({
+                        success: false,
+                        error:err.sqlMessage,
+                        data: []
+                    })
+                } else {
+                    res.send({
+                        success: true,
+                        error: "",
+                        data: "staff added"
+                    });
+                }
+            });
+        } else {
+            res.status(401).send({
+                success: false,
+                msg: "you are not authorized to perform this action",
+                data: [],
+                length: 0
+            });
+        }
+    } else{
+        res.send({
+            seccess: false,
+            error: "Invalid Token",
+            data: []
+        });
+    }
+});
+
 
 
 //--------------------admin api-------------------------------
