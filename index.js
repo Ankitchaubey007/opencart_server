@@ -95,13 +95,13 @@ app.post('/staff_login', (req, res) => {
     }
 });
 
-app.post("/add_staff", (req, res) =>{
+app.post("/add_staff", (req, res) => {
     const token = req.headers['token'];
-    if(token){
+    if (token) {
         let decoded = undefined;
-        try{
+        try {
             decoded = jwt.verify(token, secret);
-        } catch (err){
+        } catch (err) {
             res.status(401).send({
                 success: false,
                 msg: "invalid token",
@@ -110,16 +110,16 @@ app.post("/add_staff", (req, res) =>{
 
             });
         }
-        if(decoded.role == 'admin') {
-            const username =req.body.username;
-            const password =req.body.password;
+        if (decoded.role == 'admin') {
+            const username = req.body.username;
+            const password = req.body.password;
             const role = req.body.role;
-            const add_staff_query =`INSERT INTO admin (username,password,role) VALUES (?,?,?)`;
-            connection.query(add_staff_query,[username,password,role], (err, data) => {
-                if (err){
+            const add_staff_query = `INSERT INTO admin (username,password,role) VALUES (?,?,?)`;
+            connection.query(add_staff_query, [username, password, role], (err, data) => {
+                if (err) {
                     req.send({
                         success: false,
-                        error:err.sqlMessage,
+                        error: err.sqlMessage,
                         data: []
                     })
                 } else {
@@ -138,7 +138,7 @@ app.post("/add_staff", (req, res) =>{
                 length: 0
             });
         }
-    } else{
+    } else {
         res.send({
             seccess: false,
             error: "Invalid Token",
@@ -148,6 +148,89 @@ app.post("/add_staff", (req, res) =>{
 });
 
 
+
+
+app.put("/update_staff/:id", (req, res) => {
+    const token = req.headers['token'];
+    if (token) {
+        let decoded = undefined;
+        try {
+            decoded = jwt.verify(token, secret);
+        } catch (err) {
+            res.status(401).send({
+                success: false,
+                msg: "invalid token",
+                data: [],
+                length: 0
+            });
+        }
+        if (decoded == 'admin') {
+            const id = req.params.id;
+            const username = req.body.username;
+            const password = req.body.password;
+            const role = req.body.role;
+            const is_active = req.body.is_active;
+            const update_staff_query = `UPDATE admin SET username ?, password =?,role =?,is_active =? WHERE admin_id =?`;
+            connection.query(update_staff_query, [username, password, role, is_active, id], (err, data) => {
+                if (err) {
+                    res.send({
+                        success: false,
+                        error: err.sqlMessage,
+                        data: []
+                    });
+                } else {
+                    res.send({
+                        success: true,
+                        error: "",
+                        data: "staff updated"
+                    });
+                }
+            });
+        } else {
+            res.status(401).send({
+                success: false,
+                msg: "you are not authorized to perform this action",
+                data: [],
+                length: 0
+            });
+        }
+    } else {
+        res.send({
+            success: false,
+            error: "invalid token",
+            data: []
+        });
+    }
+});
+
+app.put("/update_staff_password/:id",async (req,res) =>{
+    const token =req.headers['token'];
+    const decoded = await verify_token (token,secret,res);
+    if (decoded && decoded.role == 'staff' && decoded.id == req.params.id) {
+        const id = req.params.id;
+        const old_password = req.body.old_password;
+        const new_password = req.body.new_password;
+        const confirm_password = req.body.confirm_password;
+        if( new_password == confirm_password){ 
+            const update_staff_query = `UPDATE admin SET password =? WHERE admin_id =? AND password = ?`;
+            connection.query (update_staff_query,[new_password, id, old_password], (err,data) => {
+                 if(err){
+                    res.send({
+                        seccess: false,
+                        error:err.sqlMessage,
+                        data: []
+                    })
+                 } else{ 
+                    res.send ({
+                        success: true,
+                        error: "",
+                        data: "staff updated"
+                    });
+                 }
+            });
+        }
+    }
+});
 
 //--------------------admin api-------------------------------
 
