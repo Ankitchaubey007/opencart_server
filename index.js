@@ -442,7 +442,71 @@ app.put("/update_product/id", async (req, res) =>{
 
 //-----------------------product apis END------------------
 
+app.post('/add_order_items', (req, res) => {
+    const order_id = req.body.order_id;
+    const product_id = req.body.product_id;
+    const qty = req.body.qty;
+    const price = req.body.price;
+    const discount = req.body.discount;
+    const mrp = req.body.mrp;
+    const token = req.headers['token'];
+    let decoded = undefined;
+    try {
+        decoded = jwt.verify (token, secret);
+    } catch (err) {
+        console.log (err);
+        req.send ({
+            success: false,
+            err: "Invalid Token",
+            data:[]
+        });
+    }
+    console.log (decoded);
+    if(decoded.role == "admin") {
+        const query = `INSERT INTO order_items(order_id, product_id, qty, price, discount, mrp)
+        VALUES ('${order_id}', '${product_id}', '${qty}', '${price}', '${discount}', '${mrp}',)`;
+        connection.query(query, (err, data) =>{
+            if (err){
+                res.send({
+                    success: false,
+                    error: err.sqlMessage,
+                    data: []
+                });
+            } else {
+                res.send({
+                    success: true,
+                    error: '',
+                    data: 'order_items added'
+                });
+            }
+        });
+    } else{
+        res.send ({
+            success: false,
+            error: "you are not authorized to add order_items",
+            data: []
+        });
+    }
+});
 
 app.listen(8000, () => {
     console.log('Server is running on port 8000');
 });
+
+function verify_token (token, secret, res){
+    return new Promise ((resolve, reject) => {
+        jwt.verify(token,secret, (err, decoded) => {
+            if (err){
+                res.status(401).send({
+                    success: false,
+                    msg:"Invalid Token",
+                    data: [],
+                    length: 0
+                });
+                resolve(undefined);
+            }else{
+                resolve (decoded);
+            }
+        });
+    });
+}
