@@ -232,7 +232,7 @@ app.put("/update_staff_password/:id", async (req, res) => {
     }
 });
 
-//--------------------admin api-------------------------------
+//--------------------admin api end-------------------------------
 
 
 //--------------------category apis---------------------------
@@ -438,6 +438,27 @@ app.put("/update_product/id", async (req, res) =>{
             }
         });
     }
+});
+
+app.get ("/get_all_products_by_category/:category_id", (req, res) =>{
+    const category_id = req.params.category_id;
+    const get_all_products_query = `SELECT * FROM product WHERE category_id = ?`;
+    connection.query (get_all_products_query, [category_id],(err,data) => {
+        if (err) {
+            res.send({
+                success: false,
+                msg: err.sqlMessage,
+                data: []
+            });
+        } else {
+            res.send ({
+                success: true,
+                msg: "",
+                data: data,
+                length: data.length
+            });
+        }
+    });
 });
 
 //-----------------------product apis END------------------
