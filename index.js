@@ -337,29 +337,29 @@ app.put("/update_category_status/:id/:status", (req, res) => {
             const id = req.params.status;
             const update_category_query = `UPDATE category SET is_active = ? WHERE category_id = ?`;
             connection.query(update_category_query, [status, id], (err, data) => {
-            if (err) {
-                res.send({
-                    success: false,
-                    error: err.sqlMessage,
-                    data: []
-                });
-            }else {
-                res.send({
-                    success: true,
-                    error: "",
-                    data: "category updated"
-                });
-            }
+                if (err) {
+                    res.send({
+                        success: false,
+                        error: err.sqlMessage,
+                        data: []
+                    });
+                } else {
+                    res.send({
+                        success: true,
+                        error: "",
+                        data: "category updated"
+                    });
+                }
             });
-        }else {
-            res.status (401).send ({
+        } else {
+            res.status(401).send({
                 success: false,
                 msg: "you are not authorized to perform this action",
                 data: [],
                 length: 0
             });
         }
-    }else{
+    } else {
         res.send({
             success: false,
             error: "Invalid Token",
@@ -374,9 +374,9 @@ app.put("/update_category_status/:id/:status", (req, res) => {
 //--------------------product apis----------------------------
 
 app.post('/add_product', async (req, res) => {
-    const token = req.headers ['token'];
-    const decoded = await verify_token( token, secret, res);
-    if (decoded){
+    const token = req.headers['token'];
+    const decoded = await verify_token(token, secret, res);
+    if (decoded) {
         const product_name = req.body.product_name;
         const price = req.body.price;
         const mrp = req.body.mrp;
@@ -389,15 +389,15 @@ app.post('/add_product', async (req, res) => {
         const is_available = req.body.is_available;
         const add_product_query = `INSERT INTO product ( product_name, price, mrp, discount, image, info, category_id,ratings, stoke, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         connection.query(add_product_query, [product_name, price, mrp, discount, image, info, category_id, ratings, stoke, is_available,], (err, data) => {
-            if(err){
+            if (err) {
                 res.send({
-                    success:false,
+                    success: false,
                     error: err.sqlMessage,
                     data: []
                 });
-            } else{
+            } else {
                 res.send({
-                    success:true,
+                    success: true,
                     error: "",
                     data: "product added"
                 });
@@ -406,11 +406,11 @@ app.post('/add_product', async (req, res) => {
     }
 });
 
-app.put("/update_product/id", async (req, res) =>{
-    const token =req.headers['token'];
+app.put("/update_product/id", async (req, res) => {
+    const token = req.headers['token'];
     const decoded = await verify_token(token, secret, res);
-    if(decoded) {
-        const id =req.params.id;
+    if (decoded) {
+        const id = req.params.id;
         const product_name = req.body.product_name;
         const price = req.body.price;
         const mrp = req.body.mrp;
@@ -421,15 +421,15 @@ app.put("/update_product/id", async (req, res) =>{
         const ratings = req.body.ratings;
         const stock = req.body.stock;
         const is_available = req.body.is_available;
-        const update_product_query =`UPDATE product SET product_name = ?, price= ?, mrp= ?,discount = ?,image = ?, info = ?, category_id = ?, rating = ?, stock = ?, is_available = ? WHERE product_id = ?`;
-        connection.query (update_product_query, [product_name, price, mrp, discount, image, info, category_id, ratings, stock, is_available, id], (err, data) => {
-            if(err){
+        const update_product_query = `UPDATE product SET product_name = ?, price= ?, mrp= ?,discount = ?,image = ?, info = ?, category_id = ?, rating = ?, stock = ?, is_available = ? WHERE product_id = ?`;
+        connection.query(update_product_query, [product_name, price, mrp, discount, image, info, category_id, ratings, stock, is_available, id], (err, data) => {
+            if (err) {
                 res.send({
                     success: false,
-                    error:err.sqlMessage,
-                    data:[]
+                    error: err.sqlMessage,
+                    data: []
                 });
-            } else{
+            } else {
                 res.send({
                     success: true,
                     error: "",
@@ -440,10 +440,10 @@ app.put("/update_product/id", async (req, res) =>{
     }
 });
 
-app.get ("/get_all_products_by_category/:category_id", (req, res) =>{
+app.get("/get_all_products_by_category/:category_id", (req, res) => {
     const category_id = req.params.category_id;
     const get_all_products_query = `SELECT * FROM product WHERE category_id = ?`;
-    connection.query (get_all_products_query, [category_id],(err,data) => {
+    connection.query(get_all_products_query, [category_id], (err, data) => {
         if (err) {
             res.send({
                 success: false,
@@ -451,7 +451,7 @@ app.get ("/get_all_products_by_category/:category_id", (req, res) =>{
                 data: []
             });
         } else {
-            res.send ({
+            res.send({
                 success: true,
                 msg: "",
                 data: data,
@@ -463,6 +463,66 @@ app.get ("/get_all_products_by_category/:category_id", (req, res) =>{
 
 //-----------------------product apis END------------------
 
+//-----------------------customer apis---------------------
+
+app.post('/customer_login', (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+    if (username.length < 3 || password.length < 4) {
+        res.status(401).send({
+            success: false,
+            msg: 'username and password is invalid',
+            data: [],
+            length: 0
+        });
+    } else {
+        const query = `SELECT * FROM customer WHERE username = ?, password = ?`;
+        connection.query(query, [username, password], (err, result) => {
+            if (err) {
+                res.status(501).send({
+                    success: false,
+                    msg: err.sqlMessage,
+                    data: [],
+                    length: 0
+                });
+            } else if (result.length < 1) {
+                res.status(404).send({
+                    success: false,
+                    msg: "Invalid login details",
+                    data: [],
+                    length: 0
+                });
+            } else {
+                const customer = result[0];
+                if (customer.is_active == 1) {
+                    let jwtData = {
+                        id: customer['customer_id'],
+                        username: username
+                    };
+                    const token = jwt.sign(jwtData, cust_secret, { expiresIn: '24h' });
+                    res.status(200).send({
+                        success: true,
+                        msg: "login successful",
+                        data: token,
+                        length: 1
+                    });
+                } else {
+                    res.status(401).send({
+                        success: false,
+                        msg: "account is not active",
+                        data: [],
+                        length: 0
+                    });
+                }
+            }
+        });
+    }
+});
+
+
+
+//-----------------------customer apis end---------------------
+
 app.post('/add_order_items', (req, res) => {
     const order_id = req.body.order_id;
     const product_id = req.body.product_id;
@@ -473,21 +533,21 @@ app.post('/add_order_items', (req, res) => {
     const token = req.headers['token'];
     let decoded = undefined;
     try {
-        decoded = jwt.verify (token, secret);
+        decoded = jwt.verify(token, secret);
     } catch (err) {
-        console.log (err);
-        req.send ({
+        console.log(err);
+        req.send({
             success: false,
             err: "Invalid Token",
-            data:[]
+            data: []
         });
     }
-    console.log (decoded);
-    if(decoded.role == "admin") {
+    console.log(decoded);
+    if (decoded.role == "admin") {
         const query = `INSERT INTO order_items(order_id, product_id, qty, price, discount, mrp)
         VALUES ('${order_id}', '${product_id}', '${qty}', '${price}', '${discount}', '${mrp}',)`;
-        connection.query(query, (err, data) =>{
-            if (err){
+        connection.query(query, (err, data) => {
+            if (err) {
                 res.send({
                     success: false,
                     error: err.sqlMessage,
@@ -501,8 +561,8 @@ app.post('/add_order_items', (req, res) => {
                 });
             }
         });
-    } else{
-        res.send ({
+    } else {
+        res.send({
             success: false,
             error: "you are not authorized to add order_items",
             data: []
@@ -514,19 +574,19 @@ app.listen(8000, () => {
     console.log('Server is running on port 8000');
 });
 
-function verify_token (token, secret, res){
-    return new Promise ((resolve, reject) => {
-        jwt.verify(token,secret, (err, decoded) => {
-            if (err){
+function verify_token(token, secret, res) {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, secret, (err, decoded) => {
+            if (err) {
                 res.status(401).send({
                     success: false,
-                    msg:"Invalid Token",
+                    msg: "Invalid Token",
                     data: [],
                     length: 0
                 });
                 resolve(undefined);
-            }else{
-                resolve (decoded);
+            } else {
+                resolve(decoded);
             }
         });
     });
